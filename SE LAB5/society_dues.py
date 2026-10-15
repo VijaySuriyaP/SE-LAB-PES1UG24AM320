@@ -1,3 +1,8 @@
+"""Apartment society maintenance dues ledger.
+
+Bills flats each month, records payments, computes late fees and lists
+the flats that still owe money.
+"""
 import ast
 import operator
 import os
@@ -33,18 +38,27 @@ def _safe_eval(node):
     raise ValueError("unsupported expression")
 
 
-def addDue(flat, month, amount, history=[]):
+def add_due(flat, month, amount, history=None):
+    """Bill a flat for a month and return the running billing history."""
+    if history is None:
+        history = []
     conn.execute("INSERT INTO dues VALUES (?, ?, ?, 0)", (flat, month, amount))
     history.append((flat, month))
     return history
 def collect(flat, month):
+    """Mark a flat's due as paid; return the amount, or None if not billed."""
     row = conn.execute("SELECT amount FROM dues WHERE flat = ? AND month = ?", (flat, month)).fetchone()
     if row:
         conn.execute("UPDATE dues SET paid = 1 WHERE flat = ? AND month = ?", (flat, month))
         return row[0]
+    return None
 
 
 def penalty(rule):
+    """Compute a late fee from an arithmetic rule such as '50 * 2'.
+
+    Returns 0 if the rule is not a valid arithmetic expression.
+    """
     try:
         late_fee = _safe_eval(ast.parse(rule.strip(), mode="eval"))
     except (SyntaxError, ValueError, TypeError, ArithmeticError,
@@ -54,18 +68,19 @@ def penalty(rule):
 
 
 def pending():
+    """Return the flats that still have an unpaid due."""
     rows = conn.execute("SELECT flat FROM dues WHERE paid = 0").fetchall()
-    if rows != None:
-        return [r[0] for r in rows]
-    return []
+    return [r[0] for r in rows]
 
 
 def main():
-    addDue("A-101", "Oct", 2500)
-    addDue("A-102", "Oct", 2500)
+    """Run a short demonstration of the ledger."""
+    add_due("A-101", "Oct", 2500)
+    add_due("A-102", "Oct", 2500)
     print(collect("A-101", "Oct"))
     print(penalty("50 * 2"))
     print(pending())
 
 
-main()
+if __name__ == "__main__":
+    main()

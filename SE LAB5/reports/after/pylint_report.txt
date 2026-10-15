@@ -1,0 +1,6 @@
+************* Module society_dues
+society_dues.py:50:0: C0301: Line too long (104/100) (line-too-long)
+
+------------------------------------------------------------------
+Your code has been rated at 9.79/10 (previous run: 5.81/10, +3.99)
+
