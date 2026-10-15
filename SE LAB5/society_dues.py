@@ -9,7 +9,10 @@ import os
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
-conn.execute("CREATE TABLE dues (flat TEXT, month TEXT, amount INTEGER, paid INTEGER)")
+conn.execute(
+    "CREATE TABLE dues "
+    "(flat TEXT, month TEXT, amount INTEGER, paid INTEGER)"
+)
 # Secret comes from the environment, never from source control.
 TREASURER_PASSWORD = os.environ.get("TREASURER_PASSWORD", "")
 
@@ -45,11 +48,19 @@ def add_due(flat, month, amount, history=None):
     conn.execute("INSERT INTO dues VALUES (?, ?, ?, 0)", (flat, month, amount))
     history.append((flat, month))
     return history
+
+
 def collect(flat, month):
     """Mark a flat's due as paid; return the amount, or None if not billed."""
-    row = conn.execute("SELECT amount FROM dues WHERE flat = ? AND month = ?", (flat, month)).fetchone()
+    row = conn.execute(
+        "SELECT amount FROM dues WHERE flat = ? AND month = ?",
+        (flat, month),
+    ).fetchone()
     if row:
-        conn.execute("UPDATE dues SET paid = 1 WHERE flat = ? AND month = ?", (flat, month))
+        conn.execute(
+            "UPDATE dues SET paid = 1 WHERE flat = ? AND month = ?",
+            (flat, month),
+        )
         return row[0]
     return None
 
